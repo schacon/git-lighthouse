@@ -78,6 +78,10 @@ Eventually, I will try to add this functionality, too:
 
 * 
 
+== AUTHORS:
+
+* Scott Chacon (schacon@gmail.com)
+
 == LICENSE:
 
 (The MIT License)
