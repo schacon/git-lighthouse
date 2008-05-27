@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
     s.platform  =   Gem::Platform::RUBY
     s.name      =   "git-lighthouse"
-    s.version   =   "0.1.0"
+    s.version   =   "0.1.1"
     s.date      =   "2008-05-27"
     s.author    =   "Scott Chacon"
     s.email     =   "schacon@gmail.com"
