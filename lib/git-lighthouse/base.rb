@@ -19,6 +19,7 @@ module GitLighthouse
       Lighthouse.password = @password if @password
     end
 
+    
     def get_project
       Lighthouse::Project.find(@projectId)
     end
@@ -46,6 +47,21 @@ module GitLighthouse
         end
       end
       return false    
+    end
+    
+    
+    def get_attachment_data(tid, attId)
+      output = ''
+      if tic = get_ticket(tid)
+        doc = Hpricot(open(get_url(tic)))
+        urls = []
+        (doc/"ul.attachments"/:li/:ins/:h4/:a).each do |t| 
+          urls << @lh_url + t['href']
+        end      
+        idx = ((urls.size > 1) && (attId)) ? attId.to_i - 1 : 0
+        output = open(urls[idx]).read if urls[idx]
+      end
+      output
     end
     
   end

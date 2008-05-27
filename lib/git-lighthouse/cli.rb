@@ -29,12 +29,14 @@ module GitLighthouse
         handle_ticket_list
       when 'show'
         handle_ticket_show
+      when 'comments'
+        handle_ticket_comments
       when 'checkout', 'co'
         handle_ticket_checkout
-      when 'apply'
-        handle_ticket_apply
       when 'attachment'
         handle_ticket_attachment
+      when 'apply'
+        handle_ticket_apply
       when 'comment'
         handle_ticket_comment
       when 'recent'
@@ -65,8 +67,8 @@ module GitLighthouse
     end
     
     def handle_ticket_checkout
-      #tid = ARGV[1].chomp
-      #tic.ticket_checkout(tid)
+      tid = ARGV[1].chomp
+      @lh.ticket_checkout(tid)
     end
         
     ## LIST TICKETS ##
@@ -135,35 +137,33 @@ module GitLighthouse
       end
     end
     
+    # outputs actual patch file
+    def handle_ticket_attachment
+      tid = ARGV[1].chomp
+      attId = ARGV[2].chomp
+      puts @lh.get_attachment_data(tid, attId)
+    end
+    
     # outputs actual patch file, include ID=XX 
     # (and optionally NUMBER=XX if more than 1)
     def handle_ticket_attachment
       tid = ARGV[1].chomp
-      attId = ARGV[1].chomp
-
-      if tic = @lh.get_ticket(tid)
-        doc = Hpricot(open(@lh.get_url(tic)))
-        urls = []
-        (doc/"ul.attachments"/:li/:ins/:h4/:a).each do |t| 
-          urls << @lh.lh_url + t['href']
-        end      
-        idx = ((urls.size > 1) && (attId)) ? attId.to_i - 1 : 0
-        puts open(urls[idx]).read if urls[idx]
-      end
+      attId = ARGV[2].chomp
+      puts @lh.get_attachment_data(tid, attId)
     end
     
-    
-    def show_comments
-      setup_env
-
-      if tic = get_ticket(ENV['ID'])     
+    def handle_ticket_comments
+      tid = ARGV[1].chomp
+      if tic = @lh.get_ticket(tid)
+        tic_url = @lh.get_url(tic)     
         puts 
         puts 'Title   : ' + tic.title
+        puts 'URL     : ' + tic_url        
         puts
         puts '-- Comments --'
         puts
 
-        doc = Hpricot(open(get_xml_url(ENV['ID'])))
+        doc = Hpricot(open(@lh.get_xml_url(tid)))
         (doc/"versions > version").each do |comment|
           #puts (comment/'updated-at').first.inner_html rescue nil
           puts word_wrap((comment/:body).inner_html) rescue nil
@@ -245,8 +245,9 @@ module GitLighthouse
         warn "Please specify at least one action to execute:"
         puts "  list - list patch tickets in lighthouse"
         puts "  show (id) - show ticket detail "
+        puts "  comments (id) - shows all comments on this ticket"
         puts "  attachment (ticket_id) [attachment number] - output patch to stdout"
-        #puts "  checkout (id) - create a new branch and apply ticket to it"
+        puts "  checkout (id) - create a new branch and apply ticket to it"
         #puts "  apply (id) - apply ticket to current branch"
         #puts "  push (id) - create new patch file and push to ticket"
         #puts "  comment (id) - add comment to ticket"
