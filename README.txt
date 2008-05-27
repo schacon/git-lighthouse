@@ -19,7 +19,7 @@ git config lighthouse.password asdqwe
 
 You can also setup an alias, if you prefer 'git lh' to 'git-lh':
 
-git config alias.lh '!git-lh'
+git config --global alias.lh '!git-lh'
 
 Then, you can list open tickets with patches:
 
@@ -76,7 +76,10 @@ which helps them apply cleanly.
 
 Eventually, I will try to add this functionality, too:
 
-* 
+* add comments to a ticket, including '+1's
+* create a new ticket
+* upload a new version of a patch, a set of patches, or an extra patch
+* apply several/all patches from a ticket
 
 == AUTHORS:
 
