@@ -1,0 +1,24 @@
+git-lh setup
+
+git-lh list
+
+git-lh show
+
+git-lh apply
+
+git-lh
+
+
+# from git-trac
+$ git config lh-remote.lh.url http://capistrano.lighthouseapp.com
+$ git config lh-remote.lh.username myaccount
+$ git config lh-remote.lh.password mypassword
+$ git config alias.trac '!git-trac'
+
+$ git-trac checkout 1234567/new_feature_with_failing_tests.patch
+$ git-trac checkout --rebase 1234567/new_feature_with_passing_tests.patch
+# EDIT EDIT EDIT
+$ git commit -a
+$ git-trac push 1234567/improved_feature.patch
+  
+ 
