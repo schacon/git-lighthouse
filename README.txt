@@ -65,11 +65,11 @@ which helps them apply cleanly.
 
 == REQUIREMENTS:
 
-* Ruby/Git >= 1.0.7 (gem install git)
+* Ruby/Git >= 1.0.7
 
 == INSTALL:
 
-* sudo gem install schacon-ruby-git --source=http://gems.github.com
+* sudo gem install schacon-git --source=http://gems.github.com
 * sudo gem install schacon-git-lighthouse --source=http://gems.github.com
 
 == TODO:
