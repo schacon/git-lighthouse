@@ -12,7 +12,5 @@ Gem::Specification.new do |s|
     s.executables << "git-lh"
     s.homepage = "http://github/schacon/git-lighthouse"
 
-    s.add_dependency('git', [">= 1.0.7"])
-
     s.require_path  =   "lib"
 end
