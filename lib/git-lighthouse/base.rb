@@ -4,6 +4,7 @@ module GitLighthouse
     attr_reader :lh_url, :account, :projectId, :token, :email, :password
     
     def initialize(working_dir, options = {})
+      #options = {:log => Logger.new(STDOUT)}
       @git = Git.init(working_dir, options)
       
       @account = @git.config('lighthouse.account')
@@ -28,6 +29,51 @@ module GitLighthouse
       ts = Lighthouse::Ticket.find(:all, :params => { :project_id => @projectId, 
                                               :q => "state:open tagged:patch" })  
     end
+    
+    def ticket_checkout(tid, attId)
+      # stash current changes
+      if @git.branch.stashes.save('applying ticket patch')
+        puts 'stashed changes'
+      end
+      
+      ticket_handle = 'ticket' + tid.to_s
+      if attId
+        ticket_handle += '-' + attId.to_s
+      end
+      
+      tic = get_ticket(tid)
+      tic.created_at
+      
+      # last commit before this date
+      base_commit = @git.log(1).until(tic.created_at.to_s).first rescue nil
+      puts "nearest commit: " + base_commit.sha
+      
+      if base_commit
+        patch = self.get_attachment_data(tid, attId)
+        patch_file = Tempfile.new('patch')
+        patch_file.write(patch)
+        patch_file.close
+        path = patch_file.path
+        
+        begin
+          # create and checkout new branch based on recent as of ticket
+          @git.checkout(base_commit, :new_branch => ticket_handle)
+          
+          if patch.match(/From [a-f0-9]{40}/)
+            @git.apply_mail(path)
+          else
+            @git.apply(path)
+          end
+        rescue Git::GitExecuteError => e
+          puts 'Git Error : ' + e.message
+          return false
+        end
+      else
+        puts 'could not find commit before this ticket date, oddly..'
+        return false
+      end
+      return ticket_handle
+    end
 
     def get_url(tic)
       @lh_url + "/projects/#{@projectId}/tickets/#{tic.number}"
@@ -48,7 +94,6 @@ module GitLighthouse
       end
       return false    
     end
-    
     
     def get_attachment_data(tid, attId)
       output = ''

@@ -67,36 +67,13 @@ module GitLighthouse
     end
     
     def handle_ticket_checkout
-      tid = ARGV[1].chomp
-      @lh.ticket_checkout(tid)
+      tid = ARGV[1].chomp rescue nil
+      attId = ARGV[2].chomp rescue nil
+      if new_branch = @lh.ticket_checkout(tid, attId)
+        puts "Patch successfully applied - now in branch #{new_branch}"
+      end
     end
         
-    ## LIST TICKETS ##
-    def parse_ticket_list
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti list [options]"
-        opts.on("-o ORDER", "--order ORDER", "Field to order by - one of : assigned,state,date") do |v|
-          @options[:order] = v
-        end
-        opts.on("-t TAG", "--tag TAG", "List only tickets with specific tag") do |v|
-          @options[:tag] = v
-        end
-        opts.on("-s STATE", "--state STATE", "List only tickets in a specific state") do |v|
-          @options[:state] = v
-        end
-        opts.on("-a ASSIGNED", "--assigned ASSIGNED", "List only tickets assigned to someone") do |v|
-          @options[:assigned] = v
-        end
-        opts.on("-S SAVENAME", "--saveas SAVENAME", "Save this list as a saved name") do |v|
-          @options[:save] = v
-        end
-        opts.on("-l", "--list", "Show the saved queries") do |v|
-          @options[:list] = true
-        end
-      end.parse!
-    end
-    
     def handle_ticket_list
       tickets = []
       puts ['Date', 'Num', 'Attch', 'Title'].join("\t")
@@ -110,7 +87,7 @@ module GitLighthouse
     ## SHOW TICKETS ##
     
     def handle_ticket_show
-      tid = ARGV[1].chomp
+      tid = ARGV[1].chomp rescue nil
       
       if tic = @lh.get_ticket(tid)
         tic_url = @lh.get_url(tic)
@@ -139,21 +116,13 @@ module GitLighthouse
     
     # outputs actual patch file
     def handle_ticket_attachment
-      tid = ARGV[1].chomp
-      attId = ARGV[2].chomp
-      puts @lh.get_attachment_data(tid, attId)
-    end
-    
-    # outputs actual patch file, include ID=XX 
-    # (and optionally NUMBER=XX if more than 1)
-    def handle_ticket_attachment
-      tid = ARGV[1].chomp
-      attId = ARGV[2].chomp
+      tid = ARGV[1].chomp rescue nil
+      attId = ARGV[2].chomp rescue nil
       puts @lh.get_attachment_data(tid, attId)
     end
     
     def handle_ticket_comments
-      tid = ARGV[1].chomp
+      tid = ARGV[1].chomp rescue nil
       if tic = @lh.get_ticket(tid)
         tic_url = @lh.get_url(tic)     
         puts 

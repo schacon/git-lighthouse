@@ -9,21 +9,66 @@ for a git based software package.  Allows you to list, view and
 apply new patches that were submitted to Lighthouse, then comment
 on them or update them.
 
-== FEATURES/PROBLEMS:
-
-* FIX (list of features or problems)
-
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+First, setup your Lighthouse data in your git repo:
+
+git config lighthouse.account rails
+git config lighthouse.projectId 8994
+git config lighthouse.email name@email.com
+git config lighthouse.password asdqwe
+
+Then, you can list open tickets with patches:
+
+$ git-lh list
+
+Date	Num	Attch	Title
+05/01	87	1	Dependencies shouldn't swallow errors from required files.
+05/02	94	2	quote_string don't work with some postgres drivers
+05/08	142	1	belongs_to association not updated when assigning to foreign key
+05/14	191	0	Belongs to polymorphic association assignment with new records doesn't
+05/14	192	1	AR Test failure on latest mysql 
+
+You can show one of the tickets:
+
+$ git-lh show 94
+
+Title   : quote_string don't work with some postgres drivers
+Number  : 94
+
+URL     : http://rails.lighthouseapp.com/projects/8994/tickets/94
+Created : Fri May 02 08:24:20 UTC 2008
+State   : open
+Tags    : activerecord patch
+
+-- Attachments --
+
+  1 : quote_string_fix.diff
+  2 : postgres.so
+
+
+You can get an attachment:
+
+$ git-lh attachment 94 1 > quote_string_fix.diff
+
+You can checkout an attachment - this will automatically stash whatever you're
+working on, checkout a new branch called 'ticket94' and run either 'git am' or
+'git apply', depending on what kind of patch file it is.
+
+$ git-lh checkout 94 1
+
+== KNOWN ISSUES:
+
+* Will not currently checkout the commit closest to the date that the patch was uploaded,
+which would help more of them apply cleanly.
 
 == REQUIREMENTS:
 
-* Ruby/Git >= 1.0.5 (gem install git)
+* Ruby/Git >= 1.0.7 (gem install git)
 
 == INSTALL:
 
-* sudo gem install git-lh
+* sudo gem install schacon-git-lighthouse --source=http://gems.github.com
 
 == LICENSE:
 
