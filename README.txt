@@ -6,8 +6,7 @@
 
 Provides command line access to a Lighthouse ticketing system
 for a git based software package.  Allows you to list, view and 
-apply new patches that were submitted to Lighthouse, then comment
-on them or update them.
+apply new patches that were submitted to Lighthouse.
 
 == SYNOPSIS:
 
@@ -17,6 +16,10 @@ git config lighthouse.account rails
 git config lighthouse.projectId 8994
 git config lighthouse.email name@email.com
 git config lighthouse.password asdqwe
+
+You can also setup an alias, if you prefer 'git lh' to 'git-lh':
+
+git config alias.lh '!git-lh'
 
 Then, you can list open tickets with patches:
 
@@ -57,10 +60,8 @@ working on, checkout a new branch called 'ticket94' and run either 'git am' or
 
 $ git-lh checkout 94 1
 
-== KNOWN ISSUES:
-
-* Will not currently checkout the commit closest to the date that the patch was uploaded,
-which would help more of them apply cleanly.
+This will also checkout the commit closest to the date that the patch was uploaded,
+which helps them apply cleanly.
 
 == REQUIREMENTS:
 
@@ -68,7 +69,14 @@ which would help more of them apply cleanly.
 
 == INSTALL:
 
+* sudo gem install schacon-ruby-git --source=http://gems.github.com
 * sudo gem install schacon-git-lighthouse --source=http://gems.github.com
+
+== TODO:
+
+Eventually, I will try to add this functionality, too:
+
+* 
 
 == LICENSE:
 
