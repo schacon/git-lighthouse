@@ -1,16 +1,46 @@
 require File.expand_path(File.dirname(__FILE__) + "/../lib/git-lighthouse")
+require 'spec'
 require 'fileutils'
 require 'logger'
 
 module GitLighthouseSpecHelper
 
-  def test_opts
-    temp = Tempfile.new('ticdir')
+  def setup_new_git_repo
+    temp = Tempfile.new('gitrepo')
     p = temp.path
     temp.unlink
     Dir.mkdir(p)
+    Dir.chdir(p) do
+      g = Git.init
+      g.config('lighthouse.account', 'rails')
+      g.config('lighthouse.projectId', '8994')
+      g.config('lighthouse.email', 'schacon@gmail.com')
+      g.config('lighthouse.password', 'p00p')
+    end
+    p
+  end
+
+  def output_buffer
+    std_out = StringIO.new()
+    std_err = StringIO.new()
+    $stdout = std_out
+    $stderr = std_err
+
+    yield
+
+    $stdout = STDOUT
+    $stderr = STDERR
+
+    std_out.rewind()
+    std_err.rewind()
+    standard_out = std_out.read() 
+    standard_error = std_err.read() 
+    [standard_out, standard_error]
+  end
+
+  def test_opts
     logger = Logger.new(Tempfile.new('ticgit-log'))    
-    { :tic_dir => p, :logger => logger }
+    { :logger => logger }
   end
 
   def new_file(name, contents)

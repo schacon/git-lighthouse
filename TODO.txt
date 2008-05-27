@@ -1,5 +1,3 @@
-git-lh setup
-
 git-lh list
 
 git-lh show

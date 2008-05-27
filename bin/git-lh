@@ -6,6 +6,6 @@
 #
 
 require 'rubygems'
-require 'git-lighthouse'
-#require File.dirname(__FILE__) + '/../lib/git-lighthouse'
+#require 'git-lighthouse'
+require File.dirname(__FILE__) + '/../lib/git-lighthouse'
 GitLighthouse::CLI.execute

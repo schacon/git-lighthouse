@@ -20,189 +20,53 @@ module GitLighthouse
 
     def initialize(args)
       @args = args.dup
-      @tic = TicGit.open('.', :keep_state => true)
-      $stdout.sync = true # so that Net::SSH prompts show up
-    rescue NoRepoFound
-      puts "No repo found"
-      exit
+      @lh = GitLighthouse.open('.')
     end    
     
     def execute!
       case action
       when 'list':
         handle_ticket_list
-      when 'state'
-        handle_ticket_state
-      when 'assign'
-        handle_ticket_assign
       when 'show'
         handle_ticket_show
-      when 'new'
-        handle_ticket_new
       when 'checkout', 'co'
         handle_ticket_checkout
       when 'comment'
         handle_ticket_comment
-      when 'tag'
-        handle_ticket_tag
+      when 'apply'
+        handle_ticket_apply
       when 'recent'
         handle_ticket_recent
-      when 'milestone'
-        handle_ticket_milestone
       else
         puts 'not a command'
       end
     end
 
-    # tic milestone
-    # tic milestone migration1 (list tickets)
-    # tic milestone -n migration1 3/4/08 (new milestone)
-    # tic milestone -a {1} (add ticket to milestone)
-    # tic milestone -d migration1 (delete)
-    def parse_ticket_milestone
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti milestone [milestone_name] [options] [date]"
-        opts.on("-n MILESTONE", "--new MILESTONE", "Add a new milestone to this project") do |v|
-          @options[:new] = v
-        end
-        opts.on("-a TICKET", "--new TICKET", "Add a ticket to this milestone") do |v|
-          @options[:add] = v
-        end
-        opts.on("-d MILESTONE", "--delete MILESTONE", "Remove a milestone") do |v|
-          @options[:remove] = v
-        end
-      end.parse!
-    end
-
     def handle_ticket_recent
-      tic.ticket_recent(ARGV[1]).each do |commit|
-        puts commit.sha[0, 7] + "  " + commit.date.strftime("%m/%d %H:%M") + "\t" + commit.message
-      end
+      #tic.ticket_recent(ARGV[1]).each do |commit|
+      #  puts commit.sha[0, 7] + "  " + commit.date.strftime("%m/%d %H:%M") + "\t" + commit.message
+      #end
     end
     
-    def parse_ticket_tag
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti tag [tic_id] [options] [tag_name] "
-        opts.on("-d", "Remove this tag from the ticket") do |v|
-          @options[:remove] = v
-        end
-      end.parse!
+    def handle_ticket_comment      
+      #tid = nil
+      #tid = ARGV[1].chomp if ARGV[1]
+      #if(m = options[:message])
+      #  tic.ticket_comment(m, tid)
+      #elsif(f = options[:file])
+      #  tic.ticket_comment(File.read(options[:file]), tid)
+      #else
+      #  if message = get_editor_message
+      #    tic.ticket_comment(message.join(''), tid)
+      #  end
+      #end
     end
-    
-    def handle_ticket_tag
-      parse_ticket_tag
-      
-      if options[:remove]
-        puts 'remove'
-      end
-      
-      tid = nil
-      if ARGV.size > 2
-        tid = ARGV[1].chomp
-        tic.ticket_tag(ARGV[2].chomp, tid, options)
-      elsif ARGV.size > 1
-        tic.ticket_tag(ARGV[1], nil, options)
-      else  
-        puts 'You need to at least specify one tag to add'
-      end
-    end
-    
-    def parse_ticket_comment
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti comment [tic_id] [options]"
-        opts.on("-m MESSAGE", "--message MESSAGE", "Message you would like to add as a comment") do |v|
-          @options[:message] = v
-        end
-        opts.on("-f FILE", "--file FILE", "A file that contains the comment you would like to add") do |v|
-          raise ArgumentError, "Only 1 of -f/--file and -m/--message can be specified" if @options[:message]
-          raise ArgumentError, "File #{v} doesn't exist" unless File.file?(v) 
-          raise ArgumentError, "File #{v} must be <= 2048 bytes" unless File.size(v) <= 2048
-          @options[:file] = v
-        end
-      end.parse!
-    end
-
-    def handle_ticket_comment
-      parse_ticket_comment
-      
-      tid = nil
-      tid = ARGV[1].chomp if ARGV[1]
-      
-      if(m = options[:message])
-        tic.ticket_comment(m, tid)
-      elsif(f = options[:file])
-        tic.ticket_comment(File.read(options[:file]), tid)
-      else
-        if message = get_editor_message
-          tic.ticket_comment(message.join(''), tid)
-        end
-      end
-    end
-
     
     def handle_ticket_checkout
-      tid = ARGV[1].chomp
-      tic.ticket_checkout(tid)
+      #tid = ARGV[1].chomp
+      #tic.ticket_checkout(tid)
     end
-    
-    def handle_ticket_state
-      if ARGV.size > 2
-        tid = ARGV[1].chomp
-        new_state = ARGV[2].chomp
-        if valid_state(new_state)
-          tic.ticket_change(new_state, tid)
-        else
-          puts 'Invalid State - please choose from : ' + tic.tic_states.join(", ")
-        end
-      elsif ARGV.size > 1
-        # new state
-        new_state = ARGV[1].chomp
-        if valid_state(new_state)
-          tic.ticket_change(new_state)
-        else
-          puts 'Invalid State - please choose from : ' + tic.tic_states.join(", ")
-        end
-      else  
-        puts 'You need to at least specify a new state for the current ticket'
-      end
-    end
-    
-    def valid_state(state)
-      tic.tic_states.include?(state)
-    end
-    
-    def parse_ticket_assign
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti assign [options] [ticket_id]"
-        opts.on("-u USER", "--user USER", "Assign the ticket to this user") do |v|
-          @options[:user] = v
-        end
-        opts.on("-c TICKET", "--checkout TICKET", "Checkout this ticket") do |v|
-          @options[:checkout] = v
-        end
-      end.parse!
-    end
-
-    # Assigns a ticket to someone
-    #
-    # Usage:
-    # ti assign             (assign checked out ticket to current user)
-    # ti assign {1}         (assign ticket to current user)
-    # ti assign -c {1}      (assign ticket to current user and checkout the ticket)
-    # ti assign -u {name}   (assign ticket to specified user)
-    def handle_ticket_assign
-      parse_ticket_assign
-
-      tic.ticket_checkout(options[:checkout]) if options[:checkout]
-
-      tic_id = ARGV.size > 1 ? ARGV[1].chomp : nil
-      tic.ticket_assign(options[:user], tic_id)
-    end
-
+        
     ## LIST TICKETS ##
     def parse_ticket_list
       @options = {}
@@ -230,130 +94,134 @@ module GitLighthouse
     end
     
     def handle_ticket_list
-      parse_ticket_list
-      
-      options[:saved] = ARGV[1] if ARGV[1]
-      
-      if tickets = tic.ticket_list(options)
-        counter = 0
-      
-        puts
-        puts [' ', just('#', 4, 'r'), 
-              just('TicId', 6),
-              just('Title', 25), 
-              just('State', 5),
-              just('Date', 5),
-              just('Assgn', 8),
-              just('Tags', 20) ].join(" ")
-            
-        a = []
-        80.times { a << '-'}
-        puts a.join('')
-
-        tickets.each do |t|
-          counter += 1
-          tic.current_ticket == t.ticket_name ? add = '*' : add = ' '
-          puts [add, just(counter, 4, 'r'), 
-                t.ticket_id[0,6], 
-                just(t.title, 25), 
-                just(t.state, 5),
-                t.opened.strftime("%m/%d"), 
-                just(t.assigned_name, 8),
-                just(t.tags.join(','), 20) ].join(" ")
-        end
-        puts
+      tickets = []
+      puts ['Date', 'Num', 'Attch', 'Title'].join("\t")
+      @lh.get_patch_tickets.each do |tic|
+        tickets << [tic.created_at.strftime("%m/%d"), tic.number, tic.attachments_count, tic.title[0, 70]]
       end
-      
+      tickets.sort! { |a, b| a[1] <=> b[1] }
+      puts tickets.map { |t| t.join("\t") }.join("\n") 
     end
     
     ## SHOW TICKETS ##
     
     def handle_ticket_show
-      if t = @tic.ticket_show(ARGV[1])
-        ticket_show(t)
+      tid = ARGV[1].chomp
+      
+      if tic = @lh.get_ticket(tid)
+        tic_url = @lh.get_url(tic)
+        puts
+        puts 'Title   : ' + tic.title
+        puts 'Number  : ' + tic.number.to_s
+        puts
+        puts 'URL     : ' + tic_url
+        puts 'Created : ' + tic.created_at.to_s
+        puts 'State   : ' + tic.state
+        puts 'Tags    : ' + tic.tag
+        puts
+        puts word_wrap(tic.body)
+        puts
+        puts '-- Attachments --'
+        puts
+
+        # load the url, because we have to scrape the attachments
+        counter = 0
+        tic.attachments(tic_url).each do |att|
+          counter += 1
+          puts '  ' + counter.to_s + ' : ' + att.name
+        end
       end
     end
     
-    def ticket_show(t)
-      days_ago = ((Time.now - t.opened) / (60 * 60 * 24)).round.to_s
-      puts
-      puts just('Title', 10) + ': ' + t.title
-      puts just('TicId', 10) + ': ' + t.ticket_id
-      puts
-      puts just('Assigned', 10) + ': ' + t.assigned.to_s 
-      puts just('Opened', 10) + ': ' + t.opened.to_s + ' (' + days_ago + ' days)'
-      puts just('State', 10) + ': ' + t.state.upcase
-      if !t.tags.empty?
-        puts just('Tags', 10) + ': ' + t.tags.join(', ')
+    # outputs actual patch file, include ID=XX 
+    # (and optionally NUMBER=XX if more than 1)
+    def show_attach
+      setup_env
+
+      if tic = get_ticket(ENV['ID'])
+        doc = Hpricot(open(get_url(tic)))
+        urls = []
+        (doc/"ul.attachments"/:li/:ins/:h4/:a).each do |t| 
+          urls << LH_URL + t['href']
+        end      
+        idx = ((urls.size > 1) && (ENV['NUMBER'])) ? ENV['NUMBER'].to_i - 1 : 0
+        puts open(urls[idx]).read if urls[idx]
       end
-      puts
-      if !t.comments.empty?
-        puts 'Comments (' + t.comments.size.to_s + '):'
-        t.comments.reverse.each do |c|
-          puts '  * Added ' + c.added.strftime("%m/%d %H:%M") + ' by ' + c.user
-          
-          wrapped = c.comment.split("\n").collect do |line|
-            line.length > 80 ? line.gsub(/(.{1,80})(\s+|$)/, "\\1\n").strip : line
-          end * "\n"
-          
-          wrapped = wrapped.split("\n").map { |line| "\t" + line }
-          if wrapped.size > 6
-            puts wrapped[0, 6].join("\n")
-            puts "\t** more... **"
-          else
-            puts wrapped.join("\n")
+    end
+    
+    
+    def show_comments
+      setup_env
+
+      if tic = get_ticket(ENV['ID'])     
+        puts 
+        puts 'Title   : ' + tic.title
+        puts
+        puts '-- Comments --'
+        puts
+
+        doc = Hpricot(open(get_xml_url(ENV['ID'])))
+        (doc/"versions > version").each do |comment|
+          #puts (comment/'updated-at').first.inner_html rescue nil
+          puts word_wrap((comment/:body).inner_html) rescue nil
+          puts '---'
+        end
+
+        plus_ones = 0
+        (doc/"versions > version > body").each do |comment|
+          if comment.inner_html.match(/\+1/)
+            plus_ones += 1
           end
-          puts
         end
+        puts "PLUSONES: " + plus_ones.to_s
       end
     end
     
-    ## NEW TICKETS ##
-    
-    def parse_ticket_new
-      @options = {}
-      OptionParser.new do |opts|
-        opts.banner = "Usage: ti new [options]"
-        opts.on("-t TITLE", "--title TITLE", "Title to use for the name of the new ticket") do |v|
-          @options[:title] = v
-        end
-      end.parse!
-    end
-    
-    def handle_ticket_new
-      parse_ticket_new
-      if(t = options[:title])
-        ticket_show(@tic.ticket_new(t, options))
-      else
-        # interactive
-        message_file = Tempfile.new('ticgit_message').path
-        File.open(message_file, 'w') do |f|
-          f.puts "\n# ---"
-          f.puts "tags:"
-          f.puts "# first line will be the title of the tic, the rest will be the first comment"
-          f.puts "# if you would like to add initial tags, put them on the 'tags:' line, comma delim"
-        end
-        if message = get_editor_message(message_file)
-          title = message.shift
-          if title && title.chomp.length > 0
-            title = title.chomp
-            if message.last[0, 5] == 'tags:'
-              tags = message.pop
-              tags = tags.gsub('tags:', '')
-              tags = tags.split(',').map { |t| t.strip }
+    def comment
+      setup_env
+
+      if tic = get_ticket(ENV['ID'])
+        message_file = Tempfile.new('rails_message')
+        message_file.write comment_message()
+        message_file.close
+
+        if ed_comment = get_editor_message(message_file.path)
+          tic.body = ed_comment.to_s
+          if tic.save
+            puts "Comment saved"
+
+            doc = Hpricot(open(get_xml_url(ENV['ID'])))
+            plus_ones = 0
+            (doc/"versions > version > body").each do |comment|
+              if comment.inner_html.match(/\+1/)
+                plus_ones += 1
+              end
             end
-            if message.size > 0
-              comment = message.join("")
+            if plus_ones > 2
+              # we have three, lets tag it
+              tic.tags << 'verified'
+              tic.save
             end
-            ticket_show(@tic.ticket_new(title, :comment => comment, :tags => tags))
-          else
-            puts "You need to at least enter a title"
           end
-        else
-          puts "It seems you wrote nothing"
         end
       end
     end
+    
+    def comment_message
+    m = "
+    # Comment on the lighthouse ticket indicating your approval. Your comment 
+    # should indicate that you like the change and what you like about it. 
+    # Something like:
+    #
+    # '+1. I like the way you've restructured that code in generate_finder_sql, 
+    #   much nicer. The tests look good too.'
+    #
+    # If your comment simply says +1, then odds are other reviewers aren't 
+    #  going to take it too seriously. Show that you took the time to review 
+    #  the patch. "
+    end
+    
+
     
     def get_editor_message(message_file = nil)
       message_file = Tempfile.new('ticgit_message').path if !message_file
@@ -389,6 +257,18 @@ module GitLighthouse
         return value.rjust(size)
       else
         return value.ljust(size)
+      end
+    end
+    
+    def word_wrap(text, line_width = 80, line_height = 15)
+      block = text.split("\n").collect do |line|
+        '   ' + ((line.length > line_width) ? line.gsub(/(.{1,#{line_width}})(\s+|$)/, "    \\1\n").strip : line)
+      end * "\n"
+      block_lines = block.split("\n")
+      if block_lines.size > line_height
+        block_lines[0, line_height].join("\n") + "\n ..."
+      else
+        block_lines.join("\n")
       end
     end
     
