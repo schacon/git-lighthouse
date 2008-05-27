@@ -21,7 +21,8 @@ You can also setup an alias, if you prefer 'git lh' to 'git-lh':
 
 git config --global alias.lh '!git-lh'
 
-Then, you can list open tickets with patches:
+Then, you can list open tickets with patches 
+(they must be 'open' and have the tag 'patch' - at some point I'll make this configurable):
 
 $ git-lh list
 
@@ -80,6 +81,7 @@ Eventually, I will try to add this functionality, too:
 * create a new ticket
 * upload a new version of a patch, a set of patches, or an extra patch
 * apply several/all patches from a ticket
+* make the tag for patches configurable
 
 == AUTHORS:
 
