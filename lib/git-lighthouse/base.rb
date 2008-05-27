@@ -1,6 +1,7 @@
 module GitLighthouse
   class Base
     
+    attr_reader :lh_url, :account, :projectId, :token, :email, :password
     
     def initialize(working_dir, options = {})
       @git = Git.init(working_dir, options)

@@ -31,10 +31,12 @@ module GitLighthouse
         handle_ticket_show
       when 'checkout', 'co'
         handle_ticket_checkout
-      when 'comment'
-        handle_ticket_comment
       when 'apply'
         handle_ticket_apply
+      when 'attachment'
+        handle_ticket_attachment
+      when 'comment'
+        handle_ticket_comment
       when 'recent'
         handle_ticket_recent
       else
@@ -135,16 +137,17 @@ module GitLighthouse
     
     # outputs actual patch file, include ID=XX 
     # (and optionally NUMBER=XX if more than 1)
-    def show_attach
-      setup_env
+    def handle_ticket_attachment
+      tid = ARGV[1].chomp
+      attId = ARGV[1].chomp
 
-      if tic = get_ticket(ENV['ID'])
-        doc = Hpricot(open(get_url(tic)))
+      if tic = @lh.get_ticket(tid)
+        doc = Hpricot(open(@lh.get_url(tic)))
         urls = []
         (doc/"ul.attachments"/:li/:ins/:h4/:a).each do |t| 
-          urls << LH_URL + t['href']
+          urls << @lh.lh_url + t['href']
         end      
-        idx = ((urls.size > 1) && (ENV['NUMBER'])) ? ENV['NUMBER'].to_i - 1 : 0
+        idx = ((urls.size > 1) && (attId)) ? attId.to_i - 1 : 0
         puts open(urls[idx]).read if urls[idx]
       end
     end
@@ -239,8 +242,14 @@ module GitLighthouse
     
     def parse_options! #:nodoc:      
       if args.empty?
-        warn "Please specify at least one action to execute."
-        puts " list state show new checkout comment tag assign "
+        warn "Please specify at least one action to execute:"
+        puts "  list - list patch tickets in lighthouse"
+        puts "  show (id) - show ticket detail "
+        puts "  attachment (ticket_id) [attachment number] - output patch to stdout"
+        #puts "  checkout (id) - create a new branch and apply ticket to it"
+        #puts "  apply (id) - apply ticket to current branch"
+        #puts "  push (id) - create new patch file and push to ticket"
+        #puts "  comment (id) - add comment to ticket"
         exit
       end
 

@@ -49,12 +49,19 @@ describe GitLighthouse::CLI do
       ob[0].should match(/this is a super cool ticket/)
     end
   end
+  
+  it "should be able to output a patch file to stdout" do
+    ARGV = ['attachment', '1']
+    ob = output_buffer do 
+      GitLighthouse::CLI.execute
+    end
+    ob[0].should match(/Subject: [PATCH] test patch/)
+  end
 
   it "should show a help message"
 
   it "should determine the difference between a format-patch and a diff patch"
 
-  it "should be able to output a patch file to stdout"
   
   it "should apply a patch file as a new branch"
 
