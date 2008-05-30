@@ -46,6 +46,10 @@ module GitLighthouse
       
       # last commit before this date
       base_commit = @git.log(1).until(tic.created_at.to_s).first rescue nil
+      if !base_commit
+        base_commit = @git.log(1).first
+      end
+      
       puts "nearest commit: " + base_commit.sha
       
       if base_commit
